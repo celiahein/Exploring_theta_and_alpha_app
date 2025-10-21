@@ -1,0 +1,18 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVmZXJlbmNlX2hhYml0YXRfbG9zcyA8LSByb3VuZCgxMDAqKDEtc3FydChzdW0odmFsdWVzKGZ1bmMpLCBuYS5ybT1UKSkvIHN1bSh2YWx1ZXMoaGFiKSwgbmEucm09VCkpKVxuXG5yZWZlcmVuY2VfaGFiaXRhdF9sb3NzXG5gYGAifQ== -->
+
+```r
+reference_habitat_loss <- round(100*(1-sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_habitat_loss
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+reference_habitat_loss <- round(100*(1-sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_habitat_loss
+```"
+"1","[1] 54
+"

@@ -1,0 +1,14 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFzdGUwKFwiUGF0Y2ggQSBoYXMgXCIsIHJvdW5kKDEwMCoocGF0Y2hlcyRTaGFwZV9BcmVhWzFdL3BhdGNoZXMkU2hhcGVfQXJlYVsyXSksMiksIFwiJSBhcmVhIG9mIFBhdGNoIEJcIilcbmBgYCJ9 -->
+
+```r
+paste0(\"Patch A has \", round(100*(patches$Shape_Area[1]/patches$Shape_Area[2]),2), \"% area of Patch B\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+paste0(\"Patch A has \", round(100*(patches$Shape_Area[1]/patches$Shape_Area[2]),2), \"% area of Patch B\")
+```"
+"1","[1] \"Patch A has 35.5% area of Patch B\"
+"

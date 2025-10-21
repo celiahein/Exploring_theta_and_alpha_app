@@ -1,0 +1,22 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0ZXJyYSlcbmxpYnJhcnkoc2YpXG5saWJyYXJ5KGhlcmUpXG5saWJyYXJ5KGRwbHlyKVxubGlicmFyeSh0bWFwKVxubGlicmFyeShnZGFsVXRpbGl0aWVzKVxuYGBgIn0= -->
+
+```r
+library(terra)
+library(sf)
+library(here)
+library(dplyr)
+library(tmap)
+library(gdalUtilities)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+library(terra)
+library(sf)
+library(here)
+library(dplyr)
+library(tmap)
+library(gdalUtilities)
+```"

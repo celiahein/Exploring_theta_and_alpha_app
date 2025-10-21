@@ -1,0 +1,12 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFzdGUwKFwiUmVmZXJlbmNlIENvbm5lY3RlZCBIYWJpdGF0OiBcIiwgcmVmZXJlbmNlX2Nvbm5lY3RlZF9oYWJpdGF0LCBcIiUuIFwiLCBcIlBhdGNoIEEgQ29ubmVjdGVkIEhhYml0YXQ6IFwiLCBwYXRjaEFfY29ubmVjdGVkX2hhYml0YXQsIFwiJS4gXCIsIFwiUGF0Y2ggQiBDb25uZWN0ZWQgSGFiaXRhdDogXCIsIHBhdGNoQl9jb25uZWN0ZWRfaGFiaXRhdCwgXCIlLlwiKVxuYGBgIn0= -->
+
+```r
+paste0(\"Reference Connected Habitat: \", reference_connected_habitat, \"%. \", \"Patch A Connected Habitat: \", patchA_connected_habitat, \"%. \", \"Patch B Connected Habitat: \", patchB_connected_habitat, \"%.\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+paste0(\"Reference Connected Habitat: \", reference_connected_habitat, \"%. \", \"Patch A Connected Habitat: \", patchA_connected_habitat, \"%. \", \"Patch B Connected Habitat: \", patchB_connected_habitat, \"%.\")
+```"

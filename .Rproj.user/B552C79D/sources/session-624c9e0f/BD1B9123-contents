@@ -1,0 +1,65 @@
+---
+title: "Making maps for app"
+output: html_notebook
+---
+
+
+
+```{r}
+library(ConScapeR)
+# If ConScape is already installed in Julia (otherwise add argument: install_libraries = TRUE):
+ConScapeR_setup(Sys.getenv("JULIA_PATH"))
+```
+
+```{r}
+library(terra)
+library(sf)
+library(here)
+library(dplyr)
+library(tmap)
+library(gdalUtilities)
+```
+
+```{r}
+inputs <- terra::rast("./data/Rasters.2000.tif")
+hab <- inputs[[1]]
+
+g <- ConScapeR::Grid(affinities=hab, sources=hab, targets=hab, costs="x -> (2-x)^10")
+```
+
+```{r}
+thetas <- c(0.5)
+
+alphas <- c(0.1, 0.01 , 0.001)
+
+func_maps <- c(hab,)
+```
+
+
+```{r}
+#thetas <- c(0.01, 0.5, 1.5)
+thetas <- c(0.01, 0.5, 1, 1.5, 3)
+alphas <- c(0.1, 0.075, 0.05, 0.01, 0.001)
+
+for (theta in thetas) {
+  h <- ConScapeR::GridRSP(g, theta = theta)
+  
+  for (alpha in alphas) {
+    
+    #make maps
+    betw <- ConScapeR::mat2rast(ConScapeR::betweenness_kweighted(h, alpha = alpha), hab)
+    func <- ConScapeR::mat2rast(ConScapeR::connected_habitat(h, alpha=alpha), hab)
+    
+    #set file names
+    betw_file <- here::here(paste0("data/movement_flow_theta", theta, "_alpha", alpha, ".tif"))
+    func_file <- here::here(paste0("data/functional_habitat_theta", theta, "_alpha", alpha, ".tif"))
+    #write out rasters
+    writeRaster(betw, betw_file, overwrite = TRUE)
+    writeRaster(func, func_file, overwrite = TRUE)
+  
+  }
+}
+
+```
+
+

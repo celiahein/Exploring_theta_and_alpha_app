@@ -1,0 +1,18 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ0IgPC0gQ29uU2NhcGVSOjpHcmlkKGFmZmluaXRpZXM9aGFiQiwgc291cmNlcz1oYWJCLCB0YXJnZXRzPWhhYkIsIGNvc3RzPVwieCAtPiAoMi14KV4xMFwiKVxuaEIgPC0gQ29uU2NhcGVSOjpHcmlkUlNQKGdCLCB0aGV0YT0wLjUwKVxuZnVuY0IgPC0gQ29uU2NhcGVSOjptYXQycmFzdChDb25TY2FwZVI6OmNvbm5lY3RlZF9oYWJpdGF0KGhCLCBhbHBoYT0xLzc1KSwgaGFiQilcbnBsb3QoZnVuY0IpXG5gYGAifQ== -->
+
+```r
+gB <- ConScapeR::Grid(affinities=habB, sources=habB, targets=habB, costs=\"x -> (2-x)^10\")
+hB <- ConScapeR::GridRSP(gB, theta=0.50)
+funcB <- ConScapeR::mat2rast(ConScapeR::connected_habitat(hB, alpha=1/75), habB)
+plot(funcB)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+gB <- ConScapeR::Grid(affinities=habB, sources=habB, targets=habB, costs=\"x -> (2-x)^10\")
+hB <- ConScapeR::GridRSP(gB, theta=0.50)
+funcB <- ConScapeR::mat2rast(ConScapeR::connected_habitat(hB, alpha=1/75), habB)
+plot(funcB)
+```"

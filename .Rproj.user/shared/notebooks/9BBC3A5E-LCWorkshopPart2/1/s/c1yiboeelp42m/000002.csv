@@ -1,0 +1,16 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGF0Y2hCX2Nvbm5lY3RlZF9oYWJpdGF0IDwtIHJvdW5kKDEwMCooc3FydChzdW0odmFsdWVzKGZ1bmNCKSwgbmEucm09VCkpLyBzdW0odmFsdWVzKGhhYkIpLCBuYS5ybT1UKSkpXG5cbnBhdGNoQl9jb25uZWN0ZWRfaGFiaXRhdFxuYGBgIn0= -->
+
+```r
+patchB_connected_habitat <- round(100*(sqrt(sum(values(funcB), na.rm=T))/ sum(values(habB), na.rm=T)))
+
+patchB_connected_habitat
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+patchB_connected_habitat <- round(100*(sqrt(sum(values(funcB), na.rm=T))/ sum(values(habB), na.rm=T)))
+
+patchB_connected_habitat
+```"

@@ -1,0 +1,20 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5wdXRzX3BhdGNoQSA8LSB0ZXJyYTo6cmFzdChcIi4vZGF0YS9SYXN0ZXJzLjIwMDBfcGF0Y2hBMi50aWZcIilcbmhhYkEgPC0gaW5wdXRzX3BhdGNoQVtbMV1dXG5yZXNpc3RBIDwtIGlucHV0c19wYXRjaEFbWzJdXVxuXG5wYXRjaEEgPC0gdmVjdChwYXRjaGVzWzEsXSlcbmBgYCJ9 -->
+
+```r
+inputs_patchA <- terra::rast(\"./data/Rasters.2000_patchA2.tif\")
+habA <- inputs_patchA[[1]]
+resistA <- inputs_patchA[[2]]
+
+patchA <- vect(patches[1,])
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+inputs_patchA <- terra::rast(\"./data/Rasters.2000_patchA2.tif\")
+habA <- inputs_patchA[[1]]
+resistA <- inputs_patchA[[2]]
+
+patchA <- vect(patches[1,])
+```"

@@ -1,0 +1,17 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZyA8LSBDb25TY2FwZVI6OkdyaWQoYWZmaW5pdGllcz1oYWIsIHNvdXJjZXM9aGFiLCB0YXJnZXRzPWhhYiwgY29zdHM9XCJ4IC0+ICgyLXgpXjEwXCIpXG5gYGAifQ== -->
+
+```r
+g <- ConScapeR::Grid(affinities=hab, sources=hab, targets=hab, costs=\"x -> (2-x)^10\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+g <- ConScapeR::Grid(affinities=hab, sources=hab, targets=hab, costs=\"x -> (2-x)^10\")
+```"
+"1","┌ Info: cost graph contains 1377 strongly connected subgraphs
+└ @ ConScape C:\Users\celia\.julia\packages\ConScape\BOMex\src\grid.jl:215
+┌ Info: removing 1376 nodes from affinity and cost graphs
+└ @ ConScape C:\Users\celia\.julia\packages\ConScape\BOMex\src\grid.jl:225
+"

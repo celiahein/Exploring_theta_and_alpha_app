@@ -1,0 +1,18 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShDb25TY2FwZVIpXG4jIElmIENvblNjYXBlIGlzIGFscmVhZHkgaW5zdGFsbGVkIGluIEp1bGlhIChvdGhlcndpc2UgYWRkIGFyZ3VtZW50OiBpbnN0YWxsX2xpYnJhcmllcyA9IFRSVUUpOlxuQ29uU2NhcGVSX3NldHVwKFN5cy5nZXRlbnYoXCJKVUxJQV9QQVRIXCIpKVxuYGBgIn0= -->
+
+```r
+library(ConScapeR)
+# If ConScape is already installed in Julia (otherwise add argument: install_libraries = TRUE):
+ConScapeR_setup(Sys.getenv(\"JULIA_PATH\"))
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+library(ConScapeR)
+# If ConScape is already installed in Julia (otherwise add argument: install_libraries = TRUE):
+ConScapeR_setup(Sys.getenv(\"JULIA_PATH\"))
+```"
+"1","Starting Julia ...
+"

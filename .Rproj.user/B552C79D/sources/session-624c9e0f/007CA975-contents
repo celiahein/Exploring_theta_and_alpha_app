@@ -1,0 +1,462 @@
+---
+title: "Landscape Connectivity Workshop Part 2"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Introduction and Context
+
+This notebook was designed for use during Part 2 of the Landscape Connectivity workshop on October 30, 2025, host by the Alberta Prairie Conservation Forum, written by Celia Hein, Postdoctoral Researcher at the University of Toronto.
+
+The following exercises serve as a simple example introducing connectivity modelling using the ConScape program (van Moorter el al. 2023) to inform applied landscape conservation.
+
+In this notebook, we:
+
+1\. Take publicly available data and prepare it for use in ConScape.
+
+2\. Use ConScape to map and quantify "functionally connected" habitat for a study area in the southeast of Alberta, Canada.
+
+3\. Compare "functionally connected" habitat between scenarios representing habitat restoration in Patch A (a corridor) versus Patch B (a large area, but poorly connected).\
+
+Additional resources for ConScape can be found on the [webpage](https://conscape.org/), [github](https://github.com/ConScape), and [github](https://github.com/ConScape/ConScapeR) for ConScapeR.\
+
+### Load packages
+
+```{r}
+library(ConScapeR)
+# If ConScape is already installed in Julia (otherwise add argument: install_libraries = TRUE):
+ConScapeR_setup(Sys.getenv("JULIA_PATH"))
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(terra)
+library(sf)
+library(here)
+library(dplyr)
+library(tmap)
+library(gdalUtilities)
+library(raster)
+library(fasterize)
+```
+
+### Prepare input data for ConScape
+
+Two inputs are generally required for ConScape, with one representing habitat "quality" and the other representing landscape "permeability". However, with the simplest use, we can use the habitat quality input to create a permeability estimate directly within ConScape. These inputs can be simple or complex, depending on the goals of your analysis.
+
+We will take a simple, species-agnostic approach and calculate a landscape "permeability" map directly from our habitat quality data. This simple approach facilitates reproducibility, interpretation, and minimizes computational requirements.
+
+For this analysis, we define habitat quality as habitat "naturalness", and we can create this habitat naturalness map using free, publicly available data from the Alberta Biodiversity Monitoring Institute (ABMI). The Wall-to-Wall Human Footprint Inventory (HFI) can be downloaded as a geodatabase [here](https://abmi.ca/data-portal/46.html). This file is relatively large (3.6GB), and if you prefer not to download this file, you can skip the notebook sections on data preparation and begin using ConScape with the pre-prepared data.
+
+The Human Footprint Inventory is a polygon dataset showing all human interference on the landscape, from agriculture, pipelines, roads, mines, to forestry and recreation. Based on the intensity of the human footprint, we can estimate the habitat "naturalness". For example, a major highway is less "natural" than a grazed pasture, and using pre-determined values from Marrec et al. (2020), we assign quantitative. values to each human footprint type.
+
+#### Extract human footprint data
+
+Using a proxy means that the data are not read into memory.
+
+```{r, warning=FALSE}
+#f is the path to the human footprint geodatabase
+f <- "/Users/celia/Documents/ArcGIS/Projects/celia_HFI2021/HFI2021.gdb"
+v <- vect(f, proxy=TRUE)
+```
+
+Import polygon shapefile delineating our study area and create a copy of it in raster form. Note that the coordinate reference systems match between the shapefile and geodatabase.\
+
+```{r}
+AOI <- sf::st_read("./data/area_of_interest.shp")
+
+template <- terra::rast(terra::ext(vect(AOI)), res = 25)
+r_AOI <- terra::rast(fasterize::fasterize(AOI, raster::raster(template)))
+```
+
+Here we view the study area in the southeast of Alberta.\
+
+```{r, message=FALSE}
+#read in prepared basemap 
+my_basemap <- terra::rast("./data/basemap.tif")
+
+tmap_mode("plot")
+
+base_plot <-
+  tm_shape(my_basemap) + tm_rgb()+
+  tm_shape(AOI) + tm_borders(col="black", lwd=2)+
+    tm_title("Study Area")+
+    tm_layout(frame = FALSE, legend.frame = FALSE)
+
+base_plot
+```
+
+Extract human footprint data within our study area and convert to simple features (sf) object. This may take a moment.\
+
+```{r}
+HF2021 <- query(v, extent=ext(r_AOI))
+HF2021 <- st_as_sf(HF2021)
+HF2021
+```
+
+Make sure the data is clean and valid.\
+
+```{r}
+ensure_multipolygons <- function(X) {
+    tmp1 <- tempfile(fileext = ".gpkg")
+    tmp2 <- tempfile(fileext = ".gpkg")
+    st_write(X, tmp1)
+    ogr2ogr(tmp1, tmp2, f = "GPKG", nlt = "MULTIPOLYGON")
+    Y <- st_read(tmp2)
+    st_sf(st_drop_geometry(X), geom = st_geometry(Y))
+}
+
+HF2021 <- ensure_multipolygons(HF2021)
+HF2021 <- st_make_valid(HF2021)
+```
+
+Write out the human footprint data extracted to the study area as a geopackage to speed up future use.\
+
+```{r}
+#st_write(HF2021, here::here("data/HF2021_SE.gpkg"), append=FALSE)
+```
+
+#### Convert human footprint data to habitat naturalness
+
+Import human footprint (F) and human use (U) values (Marrec et al. 2020).\
+
+```{r}
+UF_values <- readxl::read_excel(here::here("data/UF_values.xlsx"))
+head(UF_values)
+```
+
+Check that HF categories match (I modified the list so that they match for this test file, and added category "NATURAL").\
+
+```{r}
+table(is.element(unique(HF2021$FEATURE_TY), UF_values$FEATURE_TY))
+setdiff(unique(HF2021$FEATURE_TY), UF_values$FEATURE_TY)
+```
+
+Add U and F values to polygons based on their polygon feature type. Only the "South" values apply to this dataset because our study area is in the south of the province.\
+
+```{r}
+HF2021 <- left_join(HF2021, UF_values %>% dplyr::select(FEATURE_TY, South_F, South_U), by = join_by(FEATURE_TY))
+```
+
+Add natural habitat as a polygon (based on AOI polygon) with values of 0 representing human use and human footprint.\
+
+```{r}
+AOI_Feature <- AOI %>% 
+  mutate(FEATURE_TY="NATURAL", SOURCE="AOI", YEAR=NA, HFI_ID=NA, YEAR_SOURCE=NA, 
+         Shape_Length=NA, Shape_Area=NA, South_F=0, South_U=0)
+
+st_geometry(AOI_Feature) <- "geom"
+Order <- Order <- match(names(HF2021), names(AOI_Feature))
+
+AOI_Feature <- AOI_Feature[,Order]
+HF2021 <- rbind(HF2021, AOI_Feature)
+```
+
+Create two new variables:
+
+-   H = mean(U, F): combined deviation from naturalness\
+-   Q = 1 - H: degree of naturalness = habitat quality\
+
+```{r}
+HF2021 <- HF2021 %>% mutate(H = (South_F+South_U)/2) %>% mutate(Q = 1 - H)
+head(HF2021)
+```
+
+Create a raster from habitat quality Q.\
+
+```{r}
+template <- terra::rast(terra::ext(HF2021), res = 100)
+
+Q_stack <- terra::rast(fasterize(HF2021, raster::raster(template), field="Q", by="FEATURE_TY"))
+```
+
+We use the fuzzy algebraic sum to combine the Q values for mixed pixels (Marrec et al. 2020):\
+
+```{r}
+Q <- prod(Q_stack, na.rm=TRUE)
+```
+
+Now if we plot Q, "completely natural" habitat has a value of 1, and areas with more intense the human interference on the landscape have lower values to a minimum of 0. You should also see that we have some data outside of our study area that we don't need because the extraction uses the extent coordinates rather than the polygon borders. We will fix this soon. For now, let's take a look at how to create a simple "permeability" input for ConScape from our habitat quality map.\
+
+```{r}
+plot(Q)
+```
+
+Let's calculate and visualize some simple resistance values based on our habitat quality. Resistance values are now derived as a power function of H = 1 - Q (omitting the effects of water bodies and slope). We use formula (x -\> (2-x)\^10), which is appropriate for this data set, but a common alternative is (x -\> -log(x)). The above function of Q can be supplied as the cost function directly in ConScape to avoid this step. However, we will do it manually here for learning purposes.\
+
+```{r}
+R <- (2 - Q)^10
+range(values(R), na.rm=TRUE)
+```
+
+\
+
+```{r}
+plot(R)
+```
+
+Now before we save these rasters lets crop and mask to the area of interest and aggregate them to a coarse resolution so that ConScape will run quickly in the following steps.\
+
+```{r}
+crs(Q)<- crs(AOI)
+crs(R)<- crs(AOI)
+Q <- terra::crop(Q, AOI, mask=TRUE)
+R <- terra::crop(R, AOI, mask=TRUE)
+R.2000 <- terra::aggregate(R, fact=20, fun="mean")
+Q.2000 <- terra::aggregate(Q, fact=20, fun="mean")
+Rasters.2000 <- c(Q.2000, R.2000)
+```
+
+```{r,fig.width= 9}
+names(Rasters.2000) <- c("Habitat Quality", "Resistance")
+plot(Rasters.2000)
+```
+
+Code to save rasters to a .tif file.\
+
+```{r}
+#writeRaster(Rasters.2000, here::here("data/Rasters.2000.tif"), overwrite=TRUE)
+```
+
+Optional: If you skipped the initial download of the provincial Human Footprint Inventory, load the rasters here.\
+
+```{r}
+# inputs <- terra::rast("./data/Rasters.2000.tif")
+# Q <- inputs[[1]]
+# R <- inputs[[2]]
+```
+
+### Running ConScape
+
+We start by importing the input data to be used in ConScape. The "inputs" files is identical to the one we just created.\
+
+The network representation of the landscape consists of four parameters:
+
+1\. the likelihood of movement between two adjacent nodes or pixels,
+
+2\. the cost of movement between two adjacent pixels,
+
+3\. the suitability of a pixel as a path source, and
+
+4\. the suitability of a pixels as a path target.\
+
+These data can be provided independently, however it is more common to use functional relationships between parameters to reduce the data requirements, which is what we will use in this case.\
+
+More detailed explanatory text can be found on the github for ConScapeR [here](https://github.com/ConScape/ConScapeR?tab=readme-ov-file)\
+
+```{r, message=FALSE, warning=FALSE}
+AOI <- sf::st_read("./data/area_of_interest.shp")
+patches <- sf::st_read("./data/patches2.shp")
+inputs <- terra::rast("./data/Rasters.2000.tif")
+hab <- inputs[[1]]
+resist <- inputs[[2]]
+my_basemap <- terra::rast("./data/basemap.tif")
+```
+
+```{r, message=FALSE, warning=FALSE}
+tmap_mode("plot")
+```
+
+Here we can view the habitat quality and landscape resistance of the area (ignoring the patches for now).\
+
+```{r}
+names(inputs)<- c("Habitat Quality", "Resistance")
+plot(inputs, axes=F)
+```
+
+### ConScape Grid and Random Shortest Path Creation
+
+In our example we will consider network parameters 3 and 4 (pixel suitability as a path source and path target) to be equal. We assume an independent parameter 1 (likelihood of movement between adjacent pixels), and supply a cost function for parameter 2 (to represent cost of movement). This means we really don't need to have the separate resistance map, and to slightly reduce computational requirements, we use the cost function to generate the resistance map from the habitat quality map directly. We use formula (x -\> (2-x)\^10), which is appropriate for this data set, but a common alternative is (x -\> -log(x)). Using essentially one input map is the simplest and most efficient option.\
+
+Below we generate a ConScape Grid and call it g.\
+
+```{r grid}
+g <- ConScapeR::Grid(affinities=hab, sources=hab, targets=hab, costs="x -> (2-x)^10")
+```
+
+From the g Grid, we can now create the h Grid by supplying a theta value and generating Random Shortest Paths. Here we use theta = 0.5, as a generally recommended intermediate value in between entirely random movement and the optimized least cost path. Because ConScape calculates possible paths between every single pair of pixels in the landscape, this step is the most computationally demanding. However, we are working at a very coarse resolution, so this example should run quickly.\
+
+The g and h Grids are Julia objects, which we unfortunately cannot view directly in R.\
+
+```{r gridrsp}
+h <- ConScapeR::GridRSP(g, theta=0.50)
+```
+
+### Mapping functionally connected habitat
+
+One of the main advantages of ConScape is that it allows one to directly map and compute the amount of connected habitat in a landscape. The ConScape authors have coined the term ‘functional habitat’ to evaluate not only the quality, but also the functional connectivity of habitat. "Functional habitat" is habitat that is simultaneously suitable and functionally connected. The functionality is a value computed from weighting the quality and connectedness of a pixel, and it is computed with the function connected_habitat.\
+
+To create this map, the cost distance needs to be transformed into proximity ($k_{st} \in [0,1]$), typically using an exponential decay function, scaled parameter alpha. This function represents biological "dispersal" distance. See van Moorter et al. (2021) for further discussion of this parameter. Additionally, I am working on another notebook tutorial to help new ConScape users estimate appropriate alpha parameters for a given species dispersal distance, which I hope to make available soon. For now we use 1/75, which is a generous alpha representing highly mobile, large mammals (though please note that this parameter depends on the resolution of your data).\
+
+```{r functionality}
+# Compute habitat functionality (and convert to raster)
+func <- ConScapeR::mat2rast(ConScapeR::connected_habitat(h, alpha=1/75), hab)
+plot(func, axes=FALSE)
+```
+
+### Quantifying functionally connected habitat
+
+We can now sum the pixel functionalities to obtain a landscape-level functionality (similar to: (Saura and Pascual-Hortal 2007)):\
+
+```{r landscape functionality}
+sum(values(func), na.rm=T)
+```
+
+By taking the square root of this number, we can compute the amount of connected habitat similar to (Saura et al. 2011):\
+
+```{r ECH}
+sqrt(sum(values(func), na.rm=T))
+```
+
+When we compare this value to the percent of ‘unconnected’ habitat.\
+
+```{r habitat loss}
+reference_habitat_loss <- round(100*(1-sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_habitat_loss
+```
+
+```{r}
+reference_connected_habitat <- round(100*(sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_connected_habitat
+```
+
+This value would be 100% only if the entire study area had maximum habitat quality and was perfectly connected. The amount of connected habitat is dependent on both the alpha and theta values. Functionally connected habitat maps created with with larger dispersal distances (as represented by alpha) and more random movement behavior (represented by lower theta values) tend to have higher levels of functionally connected habitat and compared to those with restricted dispersal and more "optimized" movement patterns.\
+
+## Scenario Modelling
+
+
+### Viewing Patches
+
+Now lets take a look at the two "patches" we want to compare: Patch A in the north, Patch B in the south. We can only restore one patch, and in this example we will do some vary simple scenario modelling to help us decide which patch is better to restore to its "natural" state.\
+
+```{r}
+base_plot <-
+  tm_shape(my_basemap) + tm_rgb()+
+  tm_shape(AOI) + tm_borders(col="black", lwd=2)+
+  tm_shape(patches) + tm_borders(col="black", lwd=2)+
+    tm_title("Study Area")+
+    tm_layout(frame = FALSE, legend.frame = FALSE)
+
+base_plot
+```
+
+As you can see, Patch A represents a potential corridor roughly 6 km wide and 84 km long. Although it is much smaller than Patch B area, in practical terms, creating this corridor in real life still represents a massive effort.\
+
+```{r}
+paste0("Patch A has ", round(100*(patches$Shape_Area[1]/patches$Shape_Area[2]),2), "% area of Patch B")
+```
+
+### Patch A Scenario
+
+For the sake of time, rather than showing how to create this data set, we will load it directly. As you can see by the plot below, we simply set Habitat Quality within the patch equal to 1, meaning that in this scenario, conservation efforts were able to perfectly restore the area to its "natural" state.
+
+```{r, fig.width= 9}
+inputs_patchA <- terra::rast("./data/Rasters.2000_patchA2.tif")
+habA <- inputs_patchA[[1]]
+resistA <- inputs_patchA[[2]]
+patchA <- vect(patches[1,])
+
+names(inputs_patchA)<- c("Habitat Quality", "Resistance")
+plot(inputs_patchA, fun=function()lines(patchA), axes=FALSE)
+```
+
+We now perform all the steps for ConScape with the new data, recalculating the g and h grids, mapping, and quantifying functionally connected habitat, using the same theta and alpha values to make the maps comparable.\
+
+```{r}
+gA <- ConScapeR::Grid(affinities=habA, sources=habA, targets=habA, costs="x -> (2-x)^10")
+hA <- ConScapeR::GridRSP(gA, theta=0.50)
+funcA <- ConScapeR::mat2rast(ConScapeR::connected_habitat(hA, alpha=1/75), habA)
+plot(funcA, axes=FALSE)
+```
+\
+```{r}
+patchA_connected_habitat <- round(100*(sqrt(sum(values(funcA), na.rm=T))/ sum(values(habA), na.rm=T)))
+
+patchA_connected_habitat
+```
+
+### Patch B Scenario
+
+Now we repeat those steps for Patch B.\
+
+```{r, fig.width= 9}
+inputs_patchB <- terra::rast("./data/Rasters.2000_patchB2.tif")
+habB <- inputs_patchB[[1]]
+resistB <- inputs_patchB[[2]]
+
+patchB <- vect(patches[2,])
+
+names(inputs_patchB)<- c("Habitat Quality", "Resistance")
+plot(inputs_patchB, fun=function()lines(patchB), axes=FALSE)
+```
+\
+```{r}
+gB <- ConScapeR::Grid(affinities=habB, sources=habB, targets=habB, costs="x -> (2-x)^10")
+hB <- ConScapeR::GridRSP(gB, theta=0.50)
+funcB <- ConScapeR::mat2rast(ConScapeR::connected_habitat(hB, alpha=1/75), habB)
+plot(funcB,, axes=FALSE)
+```
+\
+```{r}
+patchB_connected_habitat <- round(100*(sqrt(sum(values(funcB), na.rm=T))/ sum(values(habB), na.rm=T)))
+
+patchB_connected_habitat
+```
+
+### Comparing the Reference to Patch Scenarios
+
+```{r}
+func_habitats <- c(func, funcA, funcB)
+names(func_habitats) <- c("Ref", "Patch A", "Patch B")
+
+plot(func_habitats, axes=FALSE)
+```
+\
+```{r}
+paste0("Reference Connected Habitat: ", reference_connected_habitat, "%. ", "Patch A Connected Habitat: ", patchA_connected_habitat, "%. ", "Patch B Connected Habitat: ", patchB_connected_habitat, "%.")
+```
+
+Even though Patch A is much smaller than Patch B, restoring it increases the amount of functionally connected landscape by the same amount as restoring Patch B. However, this was a very simple exercise at a coarse resolution that has it's limitations. For example, we assumed the conservation efforts were able to completely restore both patches to their natural states, and edge effects were not included in the input data, which would likely have an effect on the efficacy of the corridor.\
+
+Optional: Save your functionally connected habitat maps to a .tif file.\
+
+```{r}
+func_maps <- c(func, funcA, funcB)
+#writeRaster(func_maps, here::here("data/functional_habitat_maps.tif"), overwrite=TRUE)
+
+```
+
+#### Optional: Compute Movement Flow
+
+Another major goal of ConScape is to identify patterns of "movement flow" or potential corridors. To accomplish this, the ConScape library computes the number of paths going through each pixel weighted by the likelihood of the path, which is a node’s ‘betweenness’ in network sciences. However, an ecological advantage of ConScape is that it computes the "betweeness" and weights it by the habitat quality (of the source and target pixels) and by the proximity of pixels (as defined by the distance transformation equation scaled by alpha), which offers a more biologically realistic estimation of potential corridors.\
+
+We can calculate this for all three of our scenarios using the "betweenness_kweighted" function and converting the matrix to a raster.\
+
+```{r q-weighted betw}
+# Compute quality-and proximity-weighted betweenness (and convert to raster)
+betw <- ConScapeR::mat2rast(ConScapeR::betweenness_kweighted(h, alpha=1/75), hab)
+betwA <- ConScapeR::mat2rast(ConScapeR::betweenness_kweighted(hA, alpha=1/75), habA)
+betwB <- ConScapeR::mat2rast(ConScapeR::betweenness_kweighted(hB, alpha=1/75), habB)
+
+movement_flow <- c(betw, betwA, betwB)
+names(movement_flow) <- c("Ref", "PatchA", "PatchB")
+plot(movement_flow, axes = FALSE)
+```
+\
+Save movement flow rasters to .tif file
+\
+```{r}
+#writeRaster(movement_flow, here::here("data/movement_flow_maps.tif"), overwrite=TRUE)
+```
+
+#### References
+
+Marrec, R., Abdel Moniem, H. E., Iravani, M., Hricko, B., Kariyeva, J., & Wagner, H. H. (2020). Conceptual framework and uncertainty analysis for large-scale, species-agnostic modelling of landscape connectivity across Alberta, Canada. *Scientific Reports*, *10*(1), 6798.
+
+Saura, S., Estreguil, C., Mouton, C., & Rodríguez-Freire, M. (2011). Network analysis to assess landscape connectivity trends: application to European forests (1990–2000). *Ecological Indicators*, *11*(2), 407-416.
+
+Van Moorter, B., Kivimäki, I., Panzacchi, M., & Saerens, M. (2021). Defining and quantifying effective connectivity of landscapes for species' movements. *Ecography*, **44**(6), 870–884.
+
+Van Moorter, B., Kivimäki, I., Noack, A., Devooght, R., Panzacchi, M., Hall, K. R., Leleux, P., & Saerens, M. (2023). Accelerating advances in landscape connectivity modelling with the ConScape library. *Methods in Ecology and Evolution*, *14*(1), 133-145.

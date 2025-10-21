@@ -1,0 +1,14 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubmFtZXMoaW5wdXRzX3BhdGNoQSk8LSBjKFwiSGFiaXRhdCBRdWFsaXR5XCIsIFwiUmVzaXN0YW5jZVwiKVxucGxvdChpbnB1dHNfcGF0Y2hBLCBmdW49ZnVuY3Rpb24oKWxpbmVzKHBhdGNoQSksIGF4ZXM9RkFMU0UpXG5gYGAifQ== -->
+
+```r
+names(inputs_patchA)<- c(\"Habitat Quality\", \"Resistance\")
+plot(inputs_patchA, fun=function()lines(patchA), axes=FALSE)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+names(inputs_patchA)<- c(\"Habitat Quality\", \"Resistance\")
+plot(inputs_patchA, fun=function()lines(patchA), axes=FALSE)
+```"

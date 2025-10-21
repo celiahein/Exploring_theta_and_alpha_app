@@ -1,0 +1,18 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVmZXJlbmNlX2Nvbm5lY3RlZF9oYWJpdGF0IDwtIHJvdW5kKDEwMCooc3FydChzdW0odmFsdWVzKGZ1bmMpLCBuYS5ybT1UKSkvIHN1bSh2YWx1ZXMoaGFiKSwgbmEucm09VCkpKVxuXG5yZWZlcmVuY2VfY29ubmVjdGVkX2hhYml0YXRcbmBgYCJ9 -->
+
+```r
+reference_connected_habitat <- round(100*(sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_connected_habitat
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+reference_connected_habitat <- round(100*(sqrt(sum(values(func), na.rm=T))/ sum(values(hab), na.rm=T)))
+
+reference_connected_habitat
+```"
+"1","[1] 46
+"

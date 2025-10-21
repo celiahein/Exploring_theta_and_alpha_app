@@ -1,0 +1,26 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5wdXRzX3BhdGNoQiA8LSB0ZXJyYTo6cmFzdChcIi4vZGF0YS9SYXN0ZXJzLjIwMDBfcGF0Y2hCMi50aWZcIilcbmhhYkIgPC0gaW5wdXRzX3BhdGNoQltbMV1dXG5yZXNpc3RCIDwtIGlucHV0c19wYXRjaEJbWzJdXVxuXG5wYXRjaEIgPC0gdmVjdChwYXRjaGVzWzIsXSlcblxubmFtZXMoaW5wdXRzX3BhdGNoQik8LSBjKFwiSGFiaXRhdCBRdWFsaXR5XCIsIFwiUmVzaXN0YW5jZVwiKVxucGxvdChpbnB1dHNfcGF0Y2hCLCBmdW49ZnVuY3Rpb24oKWxpbmVzKHBhdGNoQiksIGF4ZXM9RkFMU0UpXG5gYGAifQ== -->
+
+```r
+inputs_patchB <- terra::rast(\"./data/Rasters.2000_patchB2.tif\")
+habB <- inputs_patchB[[1]]
+resistB <- inputs_patchB[[2]]
+
+patchB <- vect(patches[2,])
+
+names(inputs_patchB)<- c(\"Habitat Quality\", \"Resistance\")
+plot(inputs_patchB, fun=function()lines(patchB), axes=FALSE)
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+inputs_patchB <- terra::rast(\"./data/Rasters.2000_patchB2.tif\")
+habB <- inputs_patchB[[1]]
+resistB <- inputs_patchB[[2]]
+
+patchB <- vect(patches[2,])
+
+names(inputs_patchB)<- c(\"Habitat Quality\", \"Resistance\")
+plot(inputs_patchB, fun=function()lines(patchB), axes=FALSE)
+```"

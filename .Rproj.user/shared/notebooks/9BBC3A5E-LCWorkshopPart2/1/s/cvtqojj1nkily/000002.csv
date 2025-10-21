@@ -1,0 +1,61 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuQU9JIDwtIHNmOjpzdF9yZWFkKFwiLi9kYXRhL2FyZWFfb2ZfaW50ZXJlc3Quc2hwXCIpXG5gYGAifQ== -->
+
+```r
+AOI <- sf::st_read(\"./data/area_of_interest.shp\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+AOI <- sf::st_read(\"./data/area_of_interest.shp\")
+```"
+"1","Reading layer `area_of_interest' from data source 
+  `C:\Users\celia\Documents\PostDoc\Presentations\Workshop\WorkshopPart2\data\area_of_interest.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1 feature and 1 field
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 670855.1 ymin: 5427441 xmax: 865134.9 ymax: 5570937
+Projected CRS: NAD83 / Alberta 10-TM (Forest)
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGF0Y2hlcyA8LSBzZjo6c3RfcmVhZChcIi4vZGF0YS9wYXRjaGVzMi5zaHBcIilcbmBgYCJ9 -->
+
+```r
+patches <- sf::st_read(\"./data/patches2.shp\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+patches <- sf::st_read(\"./data/patches2.shp\")
+```"
+"1","Reading layer `patches2' from data source 
+  `C:\Users\celia\Documents\PostDoc\Presentations\Workshop\WorkshopPart2\data\patches2.shp' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 2 features and 3 fields
+Geometry type: POLYGON
+Dimension:     XYZ
+Bounding box:  xmin: 686240.9 ymin: 5462054 xmax: 827531 ymax: 5547041
+z_range:       zmin: 0 zmax: 0
+Projected CRS: NAD83 / Alberta 10-TM (Forest)
+"
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5wdXRzIDwtIHRlcnJhOjpyYXN0KFwiLi9kYXRhL1Jhc3RlcnMuMjAwMC50aWZcIilcbmhhYiA8LSBpbnB1dHNbWzFdXVxucmVzaXN0IDwtIGlucHV0c1tbMl1dXG5teV9iYXNlbWFwIDwtIHRlcnJhOjpyYXN0KFwiLi9kYXRhL2Jhc2VtYXAudGlmXCIpXG5gYGAifQ== -->
+
+```r
+inputs <- terra::rast(\"./data/Rasters.2000.tif\")
+hab <- inputs[[1]]
+resist <- inputs[[2]]
+my_basemap <- terra::rast(\"./data/basemap.tif\")
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+inputs <- terra::rast(\"./data/Rasters.2000.tif\")
+hab <- inputs[[1]]
+resist <- inputs[[2]]
+my_basemap <- terra::rast(\"./data/basemap.tif\")
+```"
